@@ -9,6 +9,11 @@ import (
 // Database Connection
 var db *sql.DB
 
+const IpDeLaBaseDeDatos = "localhost"
+const NombreDeLaBaseDeDatos = "cine"
+const UsuarioDeLaBaseDeDatos = "root"
+const ContraseñaDeLaBaseDeDatos = ""
+
 func GetConexion() *sql.DB {
 	if db != nil {
 		return db
@@ -16,7 +21,7 @@ func GetConexion() *sql.DB {
 	var err error
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
-		dsn = "root:@tcp(localhost)/cine" // Default DSN
+		dsn = UsuarioDeLaBaseDeDatos + ":" + ContraseñaDeLaBaseDeDatos + "@tcp(" + IpDeLaBaseDeDatos + ")/" + NombreDeLaBaseDeDatos // Default DSN
 	}
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
