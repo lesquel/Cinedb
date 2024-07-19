@@ -1,0 +1,12 @@
+Python 3.10
+Tkinter
+[Customtkinter](https://github.com/TomSchimansky/CustomTkinter)
+Requests
+Jinja2
+urllib3
+ThreadPoolExecutor
+webbrowser
+json
+BytesIO
+PIL
+matbplotlib
