@@ -1,86 +1,77 @@
 import customtkinter as ctk
+import threading
+from layout import Layout
+from components.index.pelicuas import Pelicuas
+from components.index.estrenos import Estrenos
+from BuscarPeli import BuscarPeli
+from hooks.Peticiones.getGenero import getAllGeneros
+from components.Nav import Nav, NavAdmin
+
 def Index(ventana, infoUser):
-    from components.Text import Text
-    from components.Button import Button
-    from hooks.Peticiones.Get import GetData
-    from Salas import Salas
-    from components.Regresar import Regresar
-    from components.Img import Img
-    from components.Nav import Nav
+    """
+    Función para crear la pantalla principal de la aplicación.
 
+    Args:
+    - ventana: La ventana principal de la aplicación.
+    - infoUser: Información del usuario actual.
+    - ifAdmin: Booleano que indica si el usuario es administrador o no. Por defecto es False.
+
+    Returns:
+    - frame: El marco principal que contiene la pantalla principal de la aplicación.
+    """
     # Crear el marco principal
-    frame = ctk.CTkFrame(ventana, corner_radius=20)
-    frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+    frame = Layout(ventana)
 
-    # Configurar grid para el marco principal
-    frame.grid_rowconfigure(0, weight=1)
-    frame.grid_columnconfigure(1, weight=1)
+    # Crear el menú lateral según el tipo de usuario
+    if infoUser["admin"]:
+        NavAdmin(frame, [{"ventana": ventana, "infoUser": infoUser}])
+    else:
+        Nav(frame, [{"ventana": ventana, "infoUser": infoUser}])
 
-    # Crear el menú lateral
-    Nav(frame, [
-        {"ventana": ventana, "infoUser": infoUser},
-    ])
+    # Marco principal para el contenido
+    frame_main = ctk.CTkFrame(frame)
+    frame_main.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
-    # Crear el contenido principal en la columna adyacente
-    canvas = ctk.CTkCanvas(frame, highlightthickness=0)
-    canvas.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+    # Encabezado de la aplicación
+    frame_header = ctk.CTkFrame(frame_main)
+    frame_header.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+    ctk.CTkLabel(frame_header, text="Intercine", font=("Arial", 24), corner_radius=20).grid(row=0, column=0, columnspan=3, padx=10, pady=10)
 
-    # Agregar una barra de desplazamiento vertical
-    scrollbar_vertical = ctk.CTkScrollbar(frame, command=canvas.yview)
-    scrollbar_vertical.grid(row=0, column=2, sticky="ns")
+    # Formulario de búsqueda por nombre de película
+    frame_form = ctk.CTkFrame(frame_header)
+    frame_form.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
-    # Configurar el lienzo para que funcione con la barra de desplazamiento vertical
-    canvas.configure(yscrollcommand=scrollbar_vertical.set, width=790, height=600)
+    entry_buscar = ctk.CTkEntry(frame_form)
+    entry_buscar.grid(row=0, column=0, padx=10, pady=10)
 
-    # Crear un marco interior para los widgets
-    frame_interior = ctk.CTkFrame(canvas)
-    frame_interior.configure(width=1000, height=600)
-    canvas.create_window((0, 0), window=frame_interior, anchor="nw")
+    def buscar_peliculas(termino):
+        # Crear un nuevo hilo para la búsqueda
+        threading.Thread(target=BuscarPeli, args=(ventana, infoUser, termino, "pelicula")).start()
 
-    # Añadir título
-    ctk.CTkLabel(frame_interior, text="Películas", font=("Arial", 24), corner_radius=20).grid(row=0, column=0, columnspan=3, padx=10, pady=10)
+    btn_buscar = ctk.CTkButton(frame_form, text="Buscar", command=lambda: buscar_peliculas(entry_buscar.get()))
+    btn_buscar.grid(row=0, column=1, padx=10, pady=10)
 
-    # Obtener la lista de películas
-    from datos.peliculas import peliculas
+    # Combo box para buscar por género
+    generos = getAllGeneros()
+    generos_combo = ctk.CTkComboBox(frame_form, values=[f"{g['nombre']} ({g['id']})" for g in generos], state="readonly")
+    generos_combo.grid(row=0, column=2, padx=10, pady=10)
 
-    def Ventana(infoPelicula, idUsuario):
-        # Mostrar la sala de la película seleccionada
-        frame2 = Salas(ventana=ventana, infoPelicula=infoPelicula, idUsuario=idUsuario)
-        frame.grid_forget()
-        frame2.grid(row=0, column=0, sticky="nsew")
-        Regresar(frame, frame2)
+    def buscar_peliculas_genero(termino):
+        from components.GeneroEntry import obtener_id_genero
+        generoId = obtener_id_genero(seleccion=termino)
+        threading.Thread(target=BuscarPeli, args=(ventana, infoUser, generoId, "genero")).start()
 
-    fila = 1
-    columna = 0
+    btn_buscar_genero = ctk.CTkButton(frame_form, text="Buscar", command=lambda: buscar_peliculas_genero(generos_combo.get()))
+    btn_buscar_genero.grid(row=0, column=3, padx=10, pady=10)
 
-    # Iterar sobre las películas para crear widgets de visualización
-    for pelicula in peliculas:
-        # Crear un marco para la película
-        marco_pelicula = ctk.CTkFrame(frame_interior, corner_radius=10, border_width=2)
-        marco_pelicula.grid(row=fila, column=columna, padx=10, pady=10, sticky="nsew")
+    # Frame para mostrar los estrenos
+    frame_estrenos = ctk.CTkFrame(frame_main)
+    frame_estrenos.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
+    Estrenos(frame_estrenos, infoUser, ventana, page=1)
 
-        # Mostrar la imagen de la película
-        Img(marco_pelicula, pelicula["img"])
-
-        # Crear un marco para el nombre de la película
-        marco_nombre = ctk.CTkFrame(marco_pelicula)
-        marco_nombre.grid(pady=(0, 10))
-
-        # Mostrar el nombre de la película
-        Text(marco_nombre, texto=pelicula["nombre"], tamanio=16, row=0, column=0, padx=10, pady=10).grid(sticky="w")
-        Text(marco_nombre, texto=f"Duracion: {pelicula["dura"]}H", tamanio=16, row=1, column=0, padx=10, pady=10).grid(sticky="w")
-
-        # Crear un botón para ver más detalles de la película
-        Button(marco_pelicula, texto="Ver", tamanio=16, row=2, column=0, eventoClick=lambda infoPelicula=pelicula, idUsuario=infoUser["id"]: Ventana(infoPelicula, idUsuario))
-
-        # Actualizar las posiciones de fila y columna
-        columna += 1
-        if columna >= 3:
-            columna = 0
-            fila += 1
-
-    # Actualizar la geometría del lienzo
-    frame.update_idletasks()
-    canvas.config(scrollregion=canvas.bbox("all"))
+    # Frame scrollable para mostrar las películas principales
+    frame_peliculas = ctk.CTkFrame(frame_main)
+    frame_peliculas.grid(row=2, column=1, sticky="nsew", padx=10, pady=10)
+    Pelicuas(frame_peliculas, infoUser, ventana, page=1)
 
     return frame

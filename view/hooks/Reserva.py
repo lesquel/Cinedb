@@ -1,20 +1,20 @@
-from tkinter import messagebox
-from hooks.Peticiones.Update import UpdateData
-from hooks.Peticiones.Get import GetData
-def Reservar(frame, info, id, sillas, idUsuario):
-        frame.grid_forget()
+from components.Tiket import Tiket
 
-        for i, vi in enumerate(sillas):
-            for j, vj in enumerate(vi):
-                if vj == "S":
-                    sillas[i][j] = idUsuario
+def Reservar(frame, info, id, sillas, idUsuario, funcion, sala):
+    """
+    Handles the reservation process and displays the ticket.
 
-        from index import Index
-        # user = GetData(f"getUsuario?idUsuario={idUsuario}")
-        # UpdateData(id=id, sillas=sillas, idUsuario=idUsuario)
-        from datos.perfil import perfil
-        user = next((perfil for perfil in perfil if perfil["id"] == idUsuario), None)
-        sillas = sillas
-        messagebox.showinfo("Reservar", "La reserva se realizo con éxito")
-        index = Index(ventana=info[0], infoUser=user)
-        index.grid(row=0, column=0, sticky="nsew")
+    Args:
+    - frame (tkinter.Frame): The parent frame where the ticket will be displayed.
+    - info (dict): Information about the movie.
+    - id (int): Identifier for the reservation.
+    - sillas (list): Matrix representing the seats.
+    - idUsuario (int): User identifier for the reservation.
+    - funcion (dict): Details of the function or screening.
+    - sala (dict): Details of the cinema hall or room.
+
+    Returns:
+    - None
+    """
+    # Importing Tiket from components.Tiket
+    Tiket(parent=frame, matriz=sillas, idUsuario=idUsuario, infoPelicula=info, funcion=funcion, sala=sala)

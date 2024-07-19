@@ -20,6 +20,8 @@ def Button(parent, texto, tamanio, row=0, column=0, columnspan=1, eventoClick=No
         command=eventoClick,
         font=("Arial", tamanio),
         corner_radius=10,  # Añadir esquinas redondeadas para un diseño más moderno
-        text_color="#ffffff"  # Establecer el color del texto
+        text_color="#ffffff",
+        fg_color="blue"  # Establecer el color del texto
     )
     button.grid(row=row, column=column, columnspan=columnspan, padx=20, pady=10)
+    return button

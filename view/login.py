@@ -1,63 +1,68 @@
-import customtkinter as ctk
 from layout import Layout
-from index import Index
-from components.Text import Text 
-from hooks.Peticiones.Get import GetData
+import customtkinter as ctk
+from components.Text import Text
 from tkinter import messagebox
+from hooks.login.autentificacion import autentificacion
+from components.ImgLocal import Img
+from datos.UrlImgs import UrlImgsLogin
+from Registrar import Registrar
 
-# Configuración global para customtkinter
-ctk.set_appearance_mode("dark")  # Tema oscuro
-ctk.set_default_color_theme("dark-blue")
+def login(ventana):
+    """
+    Función para crear la pantalla de inicio de sesión.
 
-def Cerrar(ventana):
-    ventana.destroy()  # Cierra la ventana
+    Args:
+    - ventana: La ventana principal de la aplicación.
 
-# Crear ventana principal
-ventana = ctk.CTk()
-ventana.title("Cine")
-ventana.config(bg="#000000")  # Configurar el color de fondo de la ventana
+    Returns:
+    - main_frame: El marco principal que contiene toda la interfaz de inicio de sesión.
+    """
+    # Crear y configurar el marco principal usando Layout
+    main_frame = Layout(ventana=ventana)
 
-# Crear y configurar el frame
-frame = Layout(ventana=ventana)
-frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+    # Crear el marco para la imagen
+    img_frame = ctk.CTkFrame(main_frame)
+    img_frame.grid(row=0, column=0, padx=150, pady=150, sticky="nsew")
 
-Text(frame, texto="Ingresa a Cinequel", row=0, column=0, tamanio=20)
+    # Mostrar imagen de logo de Intercine
+    img = Img(url_or_path=UrlImgsLogin["intercine"], size=300)
+    labelimg = ctk.CTkLabel(img_frame, image=img, text="", compound=ctk.TOP)
+    labelimg.grid(row=0, column=0, padx=10, pady=10)
+    Text(img_frame, texto="Intercine", row=1, column=0, tamanio=30)
 
-# Añadir campos de texto con estilo
-Text(frame, texto="Usuario", row=1, column=0, tamanio=16)
-usuario_entry = ctk.CTkEntry(frame, font=("Arial", 16), width=200, height=35)
-usuario_entry.grid(row=1, column=1, padx=10, pady=10)  # Añadir padding
+    # Crear el marco para el formulario
+    form_frame = ctk.CTkFrame(main_frame)
+    form_frame.grid(row=0, column=1, padx=100, pady=150, sticky="nsew")
 
-Text(frame, texto="Contraseña", row=2, column=0, tamanio=16)
-contrasena_entry = ctk.CTkEntry(frame, show="*", font=("Arial", 16), width=200, height=35)  # Para ocultar la contraseña
-contrasena_entry.grid(row=2, column=1, padx=10, pady=10)  # Añadir padding
+    # Título del formulario
+    Text(form_frame, texto="Ingresa a Intercine", row=0, column=0, tamanio=20)
 
-# Función para manejar el evento de "Entrar"
-def Entrar(ventana):    
-    usuario = usuario_entry.get()
-    contrasena = contrasena_entry.get()
-    if usuario == "":
-        messagebox.showinfo("Error", "Introduzca el usuario")
-        return
-    if contrasena == "":
-        messagebox.showinfo("Error", "Introduzca la contraseña")
-        return
-    from datos.perfil import perfil
-    buscarNombreContra = lambda nombre, contra: next((perfil for perfil in perfil if perfil["nombre"] == nombre and perfil["contra"] == contra), None)
-    infoUser = buscarNombreContra(nombre=usuario, contra=contrasena)
-    if not infoUser:
-        messagebox.showinfo("Error", "Usuario o contraseña incorrectos")
-        return
-    frame2 = Index(ventana, infoUser=infoUser)
-    frame.grid_forget()
-    frame2.grid(row=0, column=0, sticky="nsew")
+    # Campos de entrada de usuario y contraseña
+    Text(form_frame, texto="Usuario", row=1, column=0, tamanio=16)
+    usuario_entry = ctk.CTkEntry(form_frame, font=("Arial", 16), width=200, height=35)
+    usuario_entry.grid(row=1, column=1, padx=10, pady=10)
 
-# Añadir botones con estilo y eventos
-entrar_btn = ctk.CTkButton(frame, text="Entrar", width=120, height=40, command=lambda: Entrar(ventana))
-entrar_btn.grid(row=4, column=1, padx=10, pady=20, sticky="e")
+    Text(form_frame, texto="Contraseña", row=2, column=0, tamanio=16)
+    contrasena_entry = ctk.CTkEntry(form_frame, show="*", font=("Arial", 16), width=200, height=35)
+    contrasena_entry.grid(row=2, column=1, padx=10, pady=10)
 
-cerrar_btn = ctk.CTkButton(frame, text="Cerrar", width=120, height=40, command=lambda: Cerrar(ventana))
-cerrar_btn.grid(row=5, column=1, padx=10, pady=10, sticky="e")
+    # Función para manejar el evento de "Entrar"
+    def Entrar():
+        """
+        Función para manejar el evento de inicio de sesión.
+        """
+        usuario = usuario_entry.get()
+        contrasena = contrasena_entry.get()
+        autentificacion(ventana, usuario, contrasena)
 
-# Iniciar el bucle de eventos de la ventana
-ventana.mainloop()
+    # Botones en el formulario
+    entrar_btn = ctk.CTkButton(form_frame, text="Entrar", width=120, height=40, fg_color="blue", command=Entrar)
+    entrar_btn.grid(row=3, column=1, padx=10, pady=20, sticky="e")
+
+    registrar_btn = ctk.CTkButton(form_frame, text="Registrar", width=120, height=40, fg_color="blue", command=lambda: Registrar(ventana))
+    registrar_btn.grid(row=3, column=0, padx=10, pady=20, sticky="e")
+
+    cerrar_btn = ctk.CTkButton(form_frame, text="Cerrar", width=120, height=40, fg_color="red", command=ventana.destroy)
+    cerrar_btn.grid(row=4, column=1, padx=10, pady=10, sticky="e")
+
+    return main_frame
